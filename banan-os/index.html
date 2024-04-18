@@ -15,11 +15,18 @@
             <canvas style="display: none"></canvas>
         </div>
 
-        <div id="runtime_infos" style="display: block">
+        <div id="runtime_infos" style="display: none">
             Running: <span id="running_time">0</span> s<br>
             Speed: <span id="speed">0</span> mIPS<br>
             Avg speed: <span id="avg_speed">0</span> mIPS<br>
             <br>
+            <div id="info_storage" style="display: none">
+                <b>IDE device (hard disk)</b><br>
+                Sectors read: <span id="info_storage_sectors_read">0</span><br>
+                Sectors written: <span id="info_storage_sectors_written">0</span><br>
+                Status: <span id="info_storage_status"></span><br>
+                <br>
+            </div>
             <b>VGA</b><br>
             Mode: <span id="info_vga_mode"></span><br>
             Resolution: <span id="info_res">-</span><br>

@@ -41,6 +41,32 @@ function runtime_stats_init(emulator) {
     interval = setInterval(update_info, 1000);
 }
 
+function ide_stats_init(emulator) {
+    const stats_storage = {
+        read_sectors: 0,
+        write_sectors: 0,
+    };
+
+    const storage_elem = document.getElementById("info_storage");
+    const storage_status_elem = document.getElementById("info_storage_status");
+    const storage_sectors_read_elem = document.getElementById("info_storage_sectors_read");
+    const storage_sectors_written_elem = document.getElementById("info_storage_sectors_written");
+
+    emulator.add_listener("ide-read-start", function() {
+        storage_elem.style.display = "block";
+        storage_status_elem.textContent = "Loading ...";
+    });
+    emulator.add_listener("ide-read-end", function(args) {
+        stats_storage.read_sectors += args[2];
+        storage_status_elem.textContent = "Idle";
+        storage_sectors_read_elem.textContent = stats_storage.read_sectors;
+    });
+    emulator.add_listener("ide-write-end", function(args) {
+        stats_storage.write_sectors += args[2];
+        storage_sectors_written_elem.textContent = stats_storage.write_sectors;
+    });
+}
+
 function vga_stats_init(emulator) {
     const vga_mode_elem = document.getElementById("info_vga_mode");
     const vga_res_elem = document.getElementById("info_res");
@@ -84,6 +110,8 @@ window.onload = function() {
         disable_speaker: true,
     });
     
+    document.getElementById("runtime_infos").style.display = "block";
     runtime_stats_init(emulator);
+    ide_stats_init(emulator);
     vga_stats_init(emulator);
 }
