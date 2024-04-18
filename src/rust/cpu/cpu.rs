@@ -1930,7 +1930,10 @@ pub unsafe fn do_page_walk(
         let kernel_write_override = !user && 0 == cr0 & CR0_WP;
         if page_dir_entry & PAGE_TABLE_RW_MASK == 0 && !kernel_write_override && for_writing {
             if side_effects {
-                trigger_pagefault(addr, true, for_writing, user, jit);
+                // NOTE: page presence has to be checked since we
+                //       don't know about page table entry
+                let is_present = is_page_present_in_page_directory(addr, page_dir_entry);
+                trigger_pagefault(addr, is_present, for_writing, user, jit);
             }
             return Err(());
         }
@@ -1940,7 +1943,10 @@ pub unsafe fn do_page_walk(
             if user {
                 // Page Fault: page table accessed by non-supervisor
                 if side_effects {
-                    trigger_pagefault(addr, true, for_writing, user, jit);
+                    // NOTE: page presence has to be checked since we
+                    //       don't know about page table entry
+                    let is_present = is_page_present_in_page_directory(addr, page_dir_entry);
+                    trigger_pagefault(addr, is_present, for_writing, user, jit);
                 }
                 return Err(());
             }
@@ -2086,6 +2092,41 @@ pub unsafe fn do_page_walk(
             std::num::NonZeroI32::new_unchecked(tlb_entry)
         }
     )
+}
+
+pub unsafe fn is_page_present_in_page_directory(addr: i32, page_dir_entry: i32) -> bool {
+    let cr4 = *cr.offset(4);
+
+    if page_dir_entry & PAGE_TABLE_PRESENT_MASK == 0 {
+        return false;
+    }
+
+    if page_dir_entry & PAGE_TABLE_PSE_MASK != 0 && cr4 & CR4_PSE != 0 {
+        // whole page directory is mapped
+        return true;
+    }
+
+    let page_table_entry = if cr4 & CR4_PAE != 0 {
+        let page_table_addr =
+            (page_dir_entry as u32 & 0xFFFFF000) + (((addr as u32 >> 12) & 0x1FF) << 3);
+        let page_table_entry = read64s(page_table_addr);
+        dbg_assert!(
+            page_table_entry as u64 & 0x7FFF_FFFF_0000_0000 == 0,
+            "Unsupported: Page table entry larger than 32 bits"
+        );
+        dbg_assert!(
+            page_table_entry & 0x8000_0000_0000_0000u64 as i64 == 0,
+            "Unsupported: NX bit"
+        );
+        page_table_entry as i32
+    }
+    else {
+        let page_table_addr =
+            (page_dir_entry as u32 & 0xFFFFF000) + (((addr as u32 >> 12) & 0x3FF) << 2);
+        read32s(page_table_addr)
+    };
+
+    return page_table_entry & PAGE_TABLE_PRESENT_MASK != 0;
 }
 
 #[no_mangle]
