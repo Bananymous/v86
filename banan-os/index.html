@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+    <head>
+        <title>banan-os</title>
+        <script src="../build/libv86.js"></script>
+        <script src="main.js"></script>
+        <link rel="stylesheet" href="v86.css">
+    </head>
+    <body>
+        <button id="reset_button" onclick="emulator.restart()">Reset</button>
+        <br><br>
+
+        <div id="screen_container">
+            <div style="white-space: pre; font: 14px monospace; line-height: 16px"></div>
+            <canvas style="display: none"></canvas>
+        </div>
+
+        <div id="runtime_infos" style="display: block">
+            Running: <span id="running_time">0</span> s<br>
+            Speed: <span id="speed">0</span> mIPS<br>
+            Avg speed: <span id="avg_speed">0</span> mIPS<br>
+            <br>
+            <b>VGA</b><br>
+            Mode: <span id="info_vga_mode"></span><br>
+            Resolution: <span id="info_res">-</span><br>
+            BPP: <span id="info_bpp">-</span><br>
+        </div>
+
+        <div style="position: absolute; bottom: 5px">
+            Powered by <a href="https://github.com/copy/v86">copy's v86</a> 
+            (<a href="https://github.com/copy/v86/blob/master/LICENSE">LICENSE</a>)
+        </div>
+    </body>
+</html>
